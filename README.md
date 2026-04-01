@@ -1,6 +1,6 @@
 # ProxiFyre UI
 
-**ProxiFyre UI** 是一个基于 `WPF` 和 `WPF UI 4.0` 打造的现代化、高性能系统托盘辅助工具。它为底层的网络代理核心程序 `ProxiFyre.exe` 提供了一个优雅的图形化配置界面 (GUI)。
+**ProxiFyre UI** 是一个基于 `WPF` 和 `WPF UI 4.0` 打造的现代化、高性能透明代理工具。它为底层的网络代理核心程序 `ProxiFyre.exe` 提供了一个优雅的图形化配置界面 (GUI)。
 
 ProxiFyre 是一款 Windows 平台上的开源 SOCKS5 透明代理工具。支持透明代理指定的进程，能让那些本身完全不支持代理设置的应用程序，实现真正的透明转发。
 
