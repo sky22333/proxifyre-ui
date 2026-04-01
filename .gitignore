@@ -1,4 +1,4 @@
-bin/
-obj/
-*.exe
-FodyWeavers.xsd
+src/bin/
+src/obj/
+src/*.exe
+src/FodyWeavers.xsd
