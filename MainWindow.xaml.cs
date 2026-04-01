@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Threading;
 using Wpf.Ui.Controls;
 
 namespace proxifyre_ui
 {
     public partial class MainWindow : FluentWindow
     {
+        private bool logScrollPending;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -16,24 +20,30 @@ namespace proxifyre_ui
 
             if (this.DataContext is MainViewModel vm)
             {
-                vm.LogLines.CollectionChanged += (s, e) =>
-                {
-                    if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
-                    {
-                        var newItem = e.NewItems[0];
-                        LogListBox.ScrollIntoView(newItem);
-                    }
-                };
+                vm.LogLines.CollectionChanged += OnLogLinesCollectionChanged;
             }
+        }
+
+        private void OnLogLinesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Add || LogListBox.Items.Count == 0 || logScrollPending)
+            {
+                return;
+            }
+
+            logScrollPending = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var lastItem = LogListBox.Items[LogListBox.Items.Count - 1];
+                LogListBox.ScrollIntoView(lastItem);
+                logScrollPending = false;
+            }), DispatcherPriority.Background);
         }
 
         private void FluentWindow_Closing(object sender, CancelEventArgs e)
         {
             e.Cancel = true;
             this.Hide();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         private void TrayIcon_LeftClick(object sender, RoutedEventArgs e)

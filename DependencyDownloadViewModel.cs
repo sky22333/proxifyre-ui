@@ -1,13 +1,14 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -15,6 +16,10 @@ namespace proxifyre_ui
 {
     public partial class DependencyDownloadViewModel : ObservableObject
     {
+        private const int MaxInstallLogLines = 500;
+        private readonly ConcurrentQueue<string> pendingInstallLogs = new ConcurrentQueue<string>();
+        private readonly DispatcherTimer installLogFlushTimer;
+
         [ObservableProperty]
         private ObservableCollection<DependencyInfo> missingDependencies;
 
@@ -25,7 +30,7 @@ namespace proxifyre_ui
         private double totalProgress;
 
         [ObservableProperty]
-        private string installLogOutput = string.Empty;
+        private ObservableCollection<string> installLogLines = new ObservableCollection<string>();
 
         [ObservableProperty]
         private bool hasLog;
@@ -36,15 +41,41 @@ namespace proxifyre_ui
         {
             MissingDependencies = new ObservableCollection<DependencyInfo>(missing);
             _mainViewModel = mainViewModel;
+            installLogFlushTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(120)
+            };
+            installLogFlushTimer.Tick += FlushPendingInstallLogs;
+            installLogFlushTimer.Start();
         }
 
         private void AppendLog(string message)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            pendingInstallLogs.Enqueue($"{DateTime.Now:HH:mm:ss} - {message}");
+        }
+
+        private void FlushPendingInstallLogs(object sender, EventArgs e)
+        {
+            int flushed = 0;
+            while (flushed < 100 && pendingInstallLogs.TryDequeue(out var line))
+            {
+                InstallLogLines.Add(line);
+                flushed++;
+            }
+
+            if (InstallLogLines.Count > 0)
             {
                 HasLog = true;
-                InstallLogOutput += $"{DateTime.Now:HH:mm:ss} - {message}\n";
-            });
+            }
+
+            if (InstallLogLines.Count > MaxInstallLogLines)
+            {
+                int removeCount = InstallLogLines.Count - MaxInstallLogLines;
+                for (int i = 0; i < removeCount; i++)
+                {
+                    InstallLogLines.RemoveAt(0);
+                }
+            }
         }
 
         public Action OnCloseRequested;
@@ -58,7 +89,13 @@ namespace proxifyre_ui
         [RelayCommand]
         private void Close()
         {
+            Stop();
             OnCloseRequested?.Invoke();
+        }
+
+        public void Stop()
+        {
+            installLogFlushTimer.Stop();
         }
 
         public async Task StartDownloadAndInstallAsync()
@@ -216,26 +253,30 @@ namespace proxifyre_ui
                     else if (dep.Type == DependencyType.Msi)
                     {
                         AppendLog($"正在静默安装 MSI...");
-                        Process p = new Process();
-                        p.StartInfo.FileName = "msiexec.exe";
-                        p.StartInfo.Arguments = $"/i \"{filePath}\" /qn /norestart";
-                        p.StartInfo.UseShellExecute = true; // Required for elevation
-                        p.StartInfo.Verb = "runas"; // Request admin rights
-                        p.Start();
-                        p.WaitForExit();
-                        AppendLog($"MSI 安装完成，退出码: {p.ExitCode}");
+                        using (Process p = new Process())
+                        {
+                            p.StartInfo.FileName = "msiexec.exe";
+                            p.StartInfo.Arguments = $"/i \"{filePath}\" /qn /norestart";
+                            p.StartInfo.UseShellExecute = true;
+                            p.StartInfo.Verb = "runas";
+                            p.Start();
+                            p.WaitForExit();
+                            AppendLog($"MSI 安装完成，退出码: {p.ExitCode}");
+                        }
                     }
                     else if (dep.Type == DependencyType.Exe)
                     {
                         AppendLog($"正在静默安装 EXE...");
-                        Process p = new Process();
-                        p.StartInfo.FileName = filePath;
-                        p.StartInfo.Arguments = "/install /quiet /norestart";
-                        p.StartInfo.UseShellExecute = true;
-                        p.StartInfo.Verb = "runas";
-                        p.Start();
-                        p.WaitForExit();
-                        AppendLog($"EXE 安装完成，退出码: {p.ExitCode}");
+                        using (Process p = new Process())
+                        {
+                            p.StartInfo.FileName = filePath;
+                            p.StartInfo.Arguments = "/install /quiet /norestart";
+                            p.StartInfo.UseShellExecute = true;
+                            p.StartInfo.Verb = "runas";
+                            p.Start();
+                            p.WaitForExit();
+                            AppendLog($"EXE 安装完成，退出码: {p.ExitCode}");
+                        }
                     }
                 }
                 catch (Exception ex)

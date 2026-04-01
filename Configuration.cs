@@ -23,9 +23,6 @@ namespace proxifyre_ui
             public List<string> SupportedProtocols { get; set; } = new List<string> { "TCP", "UDP" };
         }
 
-        [JsonProperty("logLevel")]
-        public string LogLevel { get; set; } = "Info";
-
         [JsonProperty("proxies")]
         public List<Proxy> Proxies { get; set; } = new List<Proxy>();
     }

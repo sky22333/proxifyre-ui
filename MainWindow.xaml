@@ -9,7 +9,7 @@
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
         WindowCornerPreference="Round"
-        Icon="pack://application:,,,/Resources/icons8-sorting-arrows-32.ico"
+        Icon="pack://application:,,,/Resources/icons-network.ico"
         Closing="FluentWindow_Closing">
 
     <Window.DataContext>
@@ -21,7 +21,7 @@
         <tray:NotifyIcon
             x:Name="TrayIcon"
             TooltipText="ProxiFyre 托盘工具"
-            Icon="pack://application:,,,/Resources/icons8-sorting-arrows-32.ico"
+            Icon="pack://application:,,,/Resources/icons-network.ico"
             FocusOnLeftClick="True"
             MenuOnRightClick="True"
             LeftClick="TrayIcon_LeftClick">
@@ -77,7 +77,7 @@
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <ui:Button Icon="{ui:SymbolIcon Add24}" Content="添加" Command="{Binding AddProxyCommand}" Margin="0,0,10,0" />
-                    <ui:Button Icon="{ui:SymbolIcon Delete24}" Content="删除" Command="{Binding RemoveProxyCommand}" Appearance="Danger" />
+                    <ui:Button Icon="{ui:SymbolIcon Delete24}" Content="删除" Command="{Binding RemoveProxyCommand}" />
                 </StackPanel>
             </Grid>
 
@@ -188,20 +188,11 @@
 
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="日志级别：" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel}" Width="100" />
-                    </StackPanel>
-
-                    <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon Save24}" Content="保存配置" Command="{Binding SaveConfigCommand}" Margin="15,0,0,0" />
-
-                    <ui:Button Grid.Column="3" Width="120" Height="36" 
+                    <ui:Button Grid.Column="1" Width="120" Height="36" 
                                Command="{Binding ToggleStartCommand}" 
                                Appearance="{Binding IsRunning, Converter={x:Static local:RunningToAppearanceConverter.Instance}}">
                         <StackPanel Orientation="Horizontal">

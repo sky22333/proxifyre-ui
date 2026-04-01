@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -16,18 +18,18 @@ namespace proxifyre_ui
     {
         private readonly string ProgramPath = AppDomain.CurrentDomain.BaseDirectory + Constants.ProgramName;
         private readonly string ConfigPath = AppDomain.CurrentDomain.BaseDirectory + "app-config.json";
+        private const int MaxLogLines = 500;
+        private readonly ConcurrentQueue<string> pendingLogLines = new ConcurrentQueue<string>();
+        private readonly DispatcherTimer logFlushTimer;
+        private readonly DataReceivedEventHandler processOutputHandler;
+        private readonly DataReceivedEventHandler processErrorHandler;
+        private readonly EventHandler processExitedHandler;
 
         [ObservableProperty]
         private ObservableCollection<ProxyViewModel> proxies = new ObservableCollection<ProxyViewModel>();
 
         [ObservableProperty]
         private ProxyViewModel selectedProxy;
-
-        [ObservableProperty]
-        private ObservableCollection<string> logLevels = new ObservableCollection<string> { "None", "Info", "Deb", "All" };
-
-        [ObservableProperty]
-        private string selectedLogLevel = "Info";
 
         [ObservableProperty]
         private ObservableCollection<string> logLines = new ObservableCollection<string>();
@@ -45,6 +47,15 @@ namespace proxifyre_ui
 
         public MainViewModel()
         {
+            processOutputHandler = OnProcessOutputDataReceived;
+            processErrorHandler = OnProcessErrorDataReceived;
+            processExitedHandler = OnProcessExited;
+            logFlushTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            logFlushTimer.Tick += FlushPendingLogs;
+            logFlushTimer.Start();
             LoadConfig();
             CheckEnvironmentAsync();
         }
@@ -63,9 +74,9 @@ namespace proxifyre_ui
                 var dialog = new DependencyDownloadDialog(dialogPresenter);
                 var vm = new DependencyDownloadViewModel(missingDeps, this);
                 dialog.DataContext = vm;
-                
-                // Route close logic back to dialog
-                vm.OnCloseRequested += () => dialog.Hide();
+                Action closeDialog = null;
+                closeDialog = () => dialog.Hide();
+                vm.OnCloseRequested += closeDialog;
 
                 try
                 {
@@ -75,6 +86,12 @@ namespace proxifyre_ui
                 {
                     // Handle case where dialog is already open or presenter is invalid
                     Debug.WriteLine($"Failed to show dialog: {ex.Message}");
+                }
+                finally
+                {
+                    vm.OnCloseRequested -= closeDialog;
+                    vm.Stop();
+                    dialog.DataContext = null;
                 }
             }
         }
@@ -89,7 +106,6 @@ namespace proxifyre_ui
                     var config = JsonConvert.DeserializeObject<Configuration>(json);
                     if (config != null)
                     {
-                        SelectedLogLevel = config.LogLevel;
                         if (config.Proxies != null)
                         {
                             foreach (var p in config.Proxies)
@@ -111,12 +127,10 @@ namespace proxifyre_ui
             }
         }
 
-        [RelayCommand]
-        private void SaveConfig()
+        private void PersistConfig()
         {
             var config = new Configuration
             {
-                LogLevel = SelectedLogLevel,
                 Proxies = Proxies.Select(p => p.ToModel()).ToList()
             };
 
@@ -221,7 +235,7 @@ namespace proxifyre_ui
 
         private void StartProcess()
         {
-            SaveConfig();
+            PersistConfig();
 
             if (!File.Exists(ProgramPath))
             {
@@ -233,7 +247,7 @@ namespace proxifyre_ui
             {
                 if (proxifyreProcess != null && !proxifyreProcess.HasExited)
                 {
-                    proxifyreProcess.Kill();
+                    StopProcessInternal(false);
                 }
             }
             catch { }
@@ -253,13 +267,9 @@ namespace proxifyre_ui
                 EnableRaisingEvents = true
             };
 
-            proxifyreProcess.OutputDataReceived += (s, e) => { if (e.Data != null) AppendLog(e.Data); };
-            proxifyreProcess.ErrorDataReceived += (s, e) => { if (e.Data != null) AppendLog(e.Data); };
-            proxifyreProcess.Exited += (s, e) =>
-            {
-                Application.Current.Dispatcher.Invoke(() => IsRunning = false);
-                AppendLog("ProxiFyre 已停止。");
-            };
+            proxifyreProcess.OutputDataReceived += processOutputHandler;
+            proxifyreProcess.ErrorDataReceived += processErrorHandler;
+            proxifyreProcess.Exited += processExitedHandler;
 
             try
             {
@@ -280,42 +290,105 @@ namespace proxifyre_ui
 
         private void StopProcess()
         {
-            if (proxifyreProcess != null)
+            StopProcessInternal(true);
+        }
+
+        private void StopProcessInternal(bool writeLog)
+        {
+            var process = proxifyreProcess;
+            if (process == null)
             {
-                try
+                IsRunning = false;
+                return;
+            }
+
+            try
+            {
+                if (writeLog)
                 {
                     AppendLog("正在停止 ProxiFyre...");
-                    proxifyreProcess.Kill();
-                    proxifyreProcess.Dispose();
                 }
-                catch (Exception ex)
+
+                process.OutputDataReceived -= processOutputHandler;
+                process.ErrorDataReceived -= processErrorHandler;
+                process.Exited -= processExitedHandler;
+
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    process.WaitForExit(3000);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (writeLog)
                 {
                     AppendLog($"停止进程时出错: {ex.Message}");
                 }
-                finally
+            }
+            finally
+            {
+                process.Dispose();
+                if (ReferenceEquals(proxifyreProcess, process))
                 {
                     proxifyreProcess = null;
-                    IsRunning = false;
+                }
+                IsRunning = false;
+            }
+        }
+
+        private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
+                AppendLog(e.Data);
+            }
+        }
+
+        private void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
+                AppendLog(e.Data);
+            }
+        }
+
+        private void OnProcessExited(object sender, EventArgs e)
+        {
+            Application.Current.Dispatcher.InvokeAsync(() => IsRunning = false);
+            AppendLog("ProxiFyre 已停止。");
+        }
+
+        private void FlushPendingLogs(object sender, EventArgs e)
+        {
+            int flushed = 0;
+            while (flushed < 200 && pendingLogLines.TryDequeue(out var line))
+            {
+                LogLines.Add(line);
+                flushed++;
+            }
+
+            if (LogLines.Count > MaxLogLines)
+            {
+                int removeCount = LogLines.Count - MaxLogLines;
+                for (int i = 0; i < removeCount; i++)
+                {
+                    LogLines.RemoveAt(0);
                 }
             }
         }
 
         private void AppendLog(string message)
         {
-            Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                LogLines.Add($"{DateTime.Now:HH:mm:ss} - {message}");
-                if (LogLines.Count > 1000)
-                {
-                    LogLines.RemoveAt(0);
-                }
-            });
+            pendingLogLines.Enqueue($"{DateTime.Now:HH:mm:ss} - {message}");
         }
 
         [RelayCommand]
         private void ExitApp()
         {
+            logFlushTimer.Stop();
             StopProcess();
+            processTracker.Dispose();
             Application.Current.Shutdown();
         }
     }

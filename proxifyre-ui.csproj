@@ -2,13 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>10.0</LangVersion>
     <AssemblyName>proxifyre-ui</AssemblyName>
     <RootNamespace>proxifyre_ui</RootNamespace>
-    <ApplicationIcon>Resources\icons8-sorting-arrows-32.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\icons-network.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
@@ -32,9 +31,6 @@
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
-<Reference Include="System.Net.Http" />
-    <Reference Include="System.IO.Compression" />
   </ItemGroup>
 
   <ItemGroup>

@@ -24,11 +24,11 @@ dotnet run
 ```bash
 dotnet build -c Release
 ```
-> 构建成功后，可执行文件及依赖将被输出至 `bin/Release/net472/` 目录。
+> 构建成功后，可执行文件及依赖将被输出至 `bin/Release/net48/` 目录。
 
 ## 技术栈
 
-- **.NET Framework 4.7.2** (SDK-style project)
+- **.NET Framework 4.8** (SDK-style project)
 - **[WPFUI](https://github.com/lepoco/wpfui)** - v4.0 现代化 UI 库
 - **CommunityToolkit.Mvvm** - 微软官方的高性能 MVVM 架构框架
 - **Newtonsoft.Json** - 高效的 JSON 配置文件解析
