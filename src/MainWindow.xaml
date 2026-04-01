@@ -131,7 +131,7 @@
                     </StackPanel>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="代理应用" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
+                <TextBlock Grid.Row="2" Text="走代理的应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
                 
                 <Grid Grid.Row="3">
                     <Grid.RowDefinitions>
@@ -170,7 +170,7 @@
                         </Grid.ColumnDefinitions>
                         <ui:TextBox Grid.Column="0" 
                                     Text="{Binding DataContext.ManualAppInput, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}" 
-                                    PlaceholderText="输入程序名称后点击添加（支持模糊匹配）" 
+                                    PlaceholderText="添加应用（支持模糊匹配）" 
                                     ClearButtonEnabled="True" />
                         <ui:Button Grid.Column="2" Content="添加" Icon="{ui:SymbolIcon Add24}"
                                    Command="{Binding DataContext.AddManualAppCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
