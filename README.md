@@ -36,5 +36,5 @@ dotnet build -c Release
 ## 鸣谢
 
 - **wpfui** - 提供了 [WPF UI 4.0](https://github.com/lepoco/wpfui) 组件库，使此项目能够实现现代化的 UI 设计。
-- **proxifyre-tray** - 参考了 [`proxifyre-tray`](https://github.com/airenelias/proxifyre-tray) 的设计。
-- **proxifyre** - 基于 [`proxifyre`](https://github.com/wiresock/proxifyre) 核心，站在巨人肩膀上。
+- **proxifyre-tray** - 参考了 [proxifyre-tray](https://github.com/airenelias/proxifyre-tray) 的设计。
+- **proxifyre** - 基于 [proxifyre](https://github.com/wiresock/proxifyre) 核心，站在巨人肩膀上。
