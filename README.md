@@ -22,9 +22,9 @@ dotnet run
 ```
 执行 Release 构建
 ```bash
-dotnet publish -c Release -o ./proxifyre
+dotnet publish -c Release -o ./proxifyre-ui
 ```
-> 构建成功后，可执行文件及依赖将被输出至 `proxifyre` 目录。
+> 构建成功后，可执行文件及依赖将被输出至 `./proxifyre-ui` 目录。
 
 ## 技术栈
 
