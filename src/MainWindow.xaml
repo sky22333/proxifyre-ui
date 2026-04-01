@@ -63,7 +63,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="代理列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
+                <TextBlock Text="代理节点列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
                 
                 <ListView Grid.Row="1" ItemsSource="{Binding Proxies}" SelectedItem="{Binding SelectedProxy}" 
                           BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
@@ -131,7 +131,7 @@
                     </StackPanel>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="走代理的应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
+                <TextBlock Grid.Row="2" Text="需要代理的应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
                 
                 <Grid Grid.Row="3">
                     <Grid.RowDefinitions>
@@ -170,11 +170,11 @@
                         </Grid.ColumnDefinitions>
                         <ui:TextBox Grid.Column="0" 
                                     Text="{Binding DataContext.ManualAppInput, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}" 
-                                    PlaceholderText="添加应用（支持模糊匹配）" 
+                                    PlaceholderText="添加应用名称（支持模糊匹配）" 
                                     ClearButtonEnabled="True" />
                         <ui:Button Grid.Column="2" Content="添加" Icon="{ui:SymbolIcon Add24}"
                                    Command="{Binding DataContext.AddManualAppCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                        <ui:Button Grid.Column="4" Content="浏览..." Icon="{ui:SymbolIcon FolderOpen24}"
+                        <ui:Button Grid.Column="4" Content="浏览" Icon="{ui:SymbolIcon FolderOpen24}"
                                    Command="{Binding DataContext.AddAppCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                     </Grid>
                 </Grid>
