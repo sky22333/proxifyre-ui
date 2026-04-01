@@ -28,13 +28,13 @@ dotnet build -c Release
 
 ## 技术栈
 
-- **.NET Framework 4.8** (SDK-style project)
-- **[WPFUI](https://github.com/lepoco/wpfui)** - v4.0 现代化 UI 库
+- **.NET Framework 4.8** - 基础框架
+- **WPFUI** - 现代化 UI 库
 - **CommunityToolkit.Mvvm** - 微软官方的高性能 MVVM 架构框架
 - **Newtonsoft.Json** - 高效的 JSON 配置文件解析
 
 ## 鸣谢
 
-- **lepoco** - 提供了 `WPF UI 4.0` 组件库，使 ProxiFyre UI 能够实现现代化的 UI 设计。
-- **airenelias/proxifyre-tray** - 本项目借鉴了 [`airenelias/proxifyre-tray`](https://github.com/airenelias/proxifyre-tray) 的实现，并且进行重构。
-- **wiresock/proxifyre** - 本项目基于 [`wiresock/proxifyre`](https://github.com/wiresock/proxifyre) 核心，站在巨人肩膀上。
+- **wpfui** - 提供了 [WPF UI 4.0](https://github.com/lepoco/wpfui) 组件库，使此项目能够实现现代化的 UI 设计。
+- **proxifyre-tray** - 参考了 [`proxifyre-tray`](https://github.com/airenelias/proxifyre-tray) 的设计。
+- **proxifyre** - 基于 [`proxifyre`](https://github.com/wiresock/proxifyre) 核心，站在巨人肩膀上。
