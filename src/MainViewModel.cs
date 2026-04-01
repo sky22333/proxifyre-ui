@@ -196,16 +196,10 @@ namespace proxifyre_ui
         {
             if (SelectedProxy != null && !string.IsNullOrWhiteSpace(ManualAppInput))
             {
-                // Extract just the file name if a full path is pasted
-                string fileName = Path.GetFileName(ManualAppInput.Trim());
-                if (!fileName.ToLower().EndsWith(".exe"))
+                string appPattern = ManualAppInput.Trim();
+                if (!SelectedProxy.AppNames.Contains(appPattern))
                 {
-                    fileName += ".exe";
-                }
-
-                if (!SelectedProxy.AppNames.Contains(fileName))
-                {
-                    SelectedProxy.AppNames.Add(fileName);
+                    SelectedProxy.AppNames.Add(appPattern);
                 }
                 ManualAppInput = string.Empty; // Clear input after adding
             }
