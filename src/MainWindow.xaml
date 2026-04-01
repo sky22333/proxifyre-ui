@@ -131,7 +131,7 @@
                     </StackPanel>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="需要代理的应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
+                <TextBlock Grid.Row="2" Text="代理应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
                 
                 <Grid Grid.Row="3">
                     <Grid.RowDefinitions>
