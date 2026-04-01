@@ -1,0 +1,66 @@
+<ui:ContentDialog x:Class="proxifyre_ui.DependencyDownloadDialog"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                  xmlns:local="clr-namespace:proxifyre_ui"
+                  Title="检测到缺少依赖环境">
+    <ui:ContentDialog.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </ui:ContentDialog.Resources>
+    
+    <!-- Wrapper Border with Solid Background, Border, and Shadow for high contrast depth -->
+    <Border Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" 
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8" 
+            Padding="24"
+            MaxWidth="600"
+            MaxHeight="480">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="20" ShadowDepth="4" />
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="为了保证 ProxiFyre 正常运行，系统检测到缺少以下必要组件：" 
+                       TextWrapping="Wrap" Margin="0,0,0,10" />
+
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding MissingDependencies}" Margin="0,0,0,15">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,2">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Url}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <ProgressBar Grid.Row="2" Value="{Binding TotalProgress}" Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10" Height="20" />
+
+            <TextBox Grid.Row="3" Text="{Binding InstallLogOutput, Mode=OneWay}" x:Name="LogTextBox" 
+                     IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                     MinHeight="120" FontFamily="Consolas" FontSize="12" 
+                     Background="{DynamicResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+                     Visibility="{Binding HasLog, Converter={StaticResource BoolToVis}}" Margin="0,0,0,15" />
+                     
+            <Grid Grid.Row="4" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <ui:Button Grid.Column="1" Content="关闭窗口" Command="{Binding CloseCommand}" />
+                <ui:Button Grid.Column="3" Content="一键下载并安装" Appearance="Primary" Command="{Binding StartDownloadCommand}" IsEnabled="{Binding IsDownloading, Converter={x:Static local:InverseBooleanConverter.Instance}}" />
+            </Grid>
+        </Grid>
+    </Border>
+</ui:ContentDialog>
