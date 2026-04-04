@@ -193,8 +193,9 @@ namespace proxifyre_ui
             var stillMissing = EnvironmentDetector.CheckMissingDependencies();
             if (stillMissing.Count == 0)
             {
-                AppendLog("环境检测全部通过，即将关闭弹窗...");
+                AppendLog("环境检测全部通过，此弹窗2秒后自动关闭...");
                 await Task.Delay(2000);
+                Close();
             }
             else
             {
