@@ -12,7 +12,7 @@ namespace proxifyre_ui
             var missing = new List<DependencyInfo>();
 
             // 1. Check ProxiFyre.exe
-            if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.ProgramName)))
+            if (!File.Exists(Constants.ProgramPath))
             {
                 missing.Add(new DependencyInfo
                 {

@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+
 namespace proxifyre_ui
 {
     public static class Constants
@@ -7,5 +10,8 @@ namespace proxifyre_ui
         public static readonly string VcRedistDownloadUrl = "https://aka.ms/vc14/vc_redist.x64.exe";
         
         public static readonly string ProgramName = "ProxiFyre.exe";
+        public static readonly string ProxifyreRootDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProxiFyre");
+        public static readonly string ProgramPath = Path.Combine(ProxifyreRootDirectory, ProgramName);
+        public static readonly string AppConfigPath = Path.Combine(ProxifyreRootDirectory, "app-config.json");
     }
 }

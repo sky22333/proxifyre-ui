@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -211,45 +212,7 @@ namespace proxifyre_ui
                 {
                     if (dep.Type == DependencyType.Zip)
                     {
-                        string extractPath = AppDomain.CurrentDomain.BaseDirectory;
-                        AppendLog($"正在解压到: {extractPath}");
-                        
-                        using (ZipArchive archive = ZipFile.OpenRead(filePath))
-                        {
-                            foreach (ZipArchiveEntry entry in archive.Entries)
-                            {
-                                string destinationPath = Path.GetFullPath(Path.Combine(extractPath, entry.FullName));
-
-                                // Prevent ZipSlip vulnerability
-                                if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
-                                {
-                                    if (string.IsNullOrEmpty(entry.Name))
-                                    {
-                                        Directory.CreateDirectory(destinationPath);
-                                    }
-                                    else
-                                    {
-                                        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                                        
-                                        try
-                                        {
-                                            entry.ExtractToFile(destinationPath, true);
-                                        }
-                                        catch (IOException)
-                                        {
-                                            // If file is locked (like Newtonsoft.Json.dll loaded by our own app), we skip it safely
-                                            // This is normal for shared dependencies that are already in use and don't need overwriting.
-                                            AppendLog($"跳过被占用的文件: {entry.Name}");
-                                        }
-                                        catch (UnauthorizedAccessException)
-                                        {
-                                            AppendLog($"无权限覆盖文件，已跳过: {entry.Name}");
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        AppendLog($"解压完成");
+                        InstallCoreFromZip(filePath);
                     }
                     else if (dep.Type == DependencyType.Msi)
                     {
@@ -285,6 +248,128 @@ namespace proxifyre_ui
                     AppendLog($"安装失败: {ex.Message}");
                 }
             });
+        }
+
+        private void InstallCoreFromZip(string zipPath)
+        {
+            string targetRoot = Constants.ProxifyreRootDirectory;
+            string stagingRoot = Path.Combine(Path.GetTempPath(), "proxifyre-ui-staging", Guid.NewGuid().ToString("N"));
+            string normalizedStagingRoot = Path.GetFullPath(stagingRoot);
+            if (!normalizedStagingRoot.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            {
+                normalizedStagingRoot += Path.DirectorySeparatorChar;
+            }
+
+            Directory.CreateDirectory(targetRoot);
+            Directory.CreateDirectory(stagingRoot);
+            AppendLog($"正在解压到临时目录: {stagingRoot}");
+
+            try
+            {
+                using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        string destinationPath = Path.GetFullPath(Path.Combine(stagingRoot, entry.FullName));
+                        if (!destinationPath.StartsWith(normalizedStagingRoot, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        if (string.IsNullOrEmpty(entry.Name))
+                        {
+                            Directory.CreateDirectory(destinationPath);
+                            continue;
+                        }
+
+                        string destinationDirectory = Path.GetDirectoryName(destinationPath);
+                        if (!string.IsNullOrEmpty(destinationDirectory))
+                        {
+                            Directory.CreateDirectory(destinationDirectory);
+                        }
+
+                        entry.ExtractToFile(destinationPath, true);
+                    }
+                }
+
+                string sourceRoot = ResolveDeploySourceRoot(stagingRoot);
+                AppendLog($"正在部署到: {targetRoot}");
+                DeployDirectory(sourceRoot, targetRoot);
+                AppendLog("内核部署完成");
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(stagingRoot))
+                    {
+                        Directory.Delete(stagingRoot, true);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private string ResolveDeploySourceRoot(string stagingRoot)
+        {
+            string directProgramPath = Path.Combine(stagingRoot, Constants.ProgramName);
+            if (File.Exists(directProgramPath))
+            {
+                return stagingRoot;
+            }
+
+            string corePath = Directory.GetFiles(stagingRoot, Constants.ProgramName, SearchOption.AllDirectories).FirstOrDefault();
+            if (string.IsNullOrEmpty(corePath))
+            {
+                throw new FileNotFoundException($"压缩包中未找到 {Constants.ProgramName}");
+            }
+
+            return Path.GetDirectoryName(corePath);
+        }
+
+        private void DeployDirectory(string sourceRoot, string targetRoot)
+        {
+            foreach (string sourceFile in Directory.GetFiles(sourceRoot, "*", SearchOption.AllDirectories))
+            {
+                string relativePath = sourceFile.Substring(sourceRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string targetFile = Path.Combine(targetRoot, relativePath);
+                string targetDir = Path.GetDirectoryName(targetFile);
+                if (!string.IsNullOrEmpty(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                }
+
+                if (!ShouldCopyFile(sourceFile, targetFile))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    File.Copy(sourceFile, targetFile, true);
+                    File.SetLastWriteTimeUtc(targetFile, File.GetLastWriteTimeUtc(sourceFile));
+                }
+                catch (IOException)
+                {
+                    AppendLog($"跳过被占用的文件: {Path.GetFileName(sourceFile)}");
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    AppendLog($"无权限覆盖文件，已跳过: {Path.GetFileName(sourceFile)}");
+                }
+            }
+        }
+
+        private bool ShouldCopyFile(string sourceFile, string targetFile)
+        {
+            if (!File.Exists(targetFile))
+            {
+                return true;
+            }
+
+            FileInfo sourceInfo = new FileInfo(sourceFile);
+            FileInfo targetInfo = new FileInfo(targetFile);
+            return sourceInfo.Length != targetInfo.Length || sourceInfo.LastWriteTimeUtc != targetInfo.LastWriteTimeUtc;
         }
 
         private string GetExtension(DependencyType type)

@@ -16,8 +16,8 @@ namespace proxifyre_ui
 {
     public partial class MainViewModel : ObservableObject
     {
-        private readonly string ProgramPath = AppDomain.CurrentDomain.BaseDirectory + Constants.ProgramName;
-        private readonly string ConfigPath = AppDomain.CurrentDomain.BaseDirectory + "app-config.json";
+        private readonly string ProgramPath = Constants.ProgramPath;
+        private readonly string ConfigPath = Constants.AppConfigPath;
         private const int MaxLogLines = 500;
         private readonly ConcurrentQueue<string> pendingLogLines = new ConcurrentQueue<string>();
         private readonly DispatcherTimer logFlushTimer;
@@ -56,8 +56,14 @@ namespace proxifyre_ui
             };
             logFlushTimer.Tick += FlushPendingLogs;
             logFlushTimer.Start();
+            EnsureWorkDirectories();
             LoadConfig();
             CheckEnvironmentAsync();
+        }
+
+        private void EnsureWorkDirectories()
+        {
+            Directory.CreateDirectory(Constants.ProxifyreRootDirectory);
         }
 
         private async void CheckEnvironmentAsync()
@@ -136,6 +142,7 @@ namespace proxifyre_ui
 
             try
             {
+                Directory.CreateDirectory(Constants.ProxifyreRootDirectory);
                 string json = JsonConvert.SerializeObject(config, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                 File.WriteAllText(ConfigPath, json);
                 AppendLog("配置文件已保存");
@@ -233,7 +240,7 @@ namespace proxifyre_ui
 
             if (!File.Exists(ProgramPath))
             {
-                AppendLog($"找不到核心程序: {Constants.ProgramName}，请将其与本程序放在同一目录！");
+                AppendLog($"找不到核心程序: {ProgramPath}");
                 return;
             }
 
@@ -253,6 +260,7 @@ namespace proxifyre_ui
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = ProgramPath,
+                    WorkingDirectory = Constants.ProxifyreRootDirectory,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
