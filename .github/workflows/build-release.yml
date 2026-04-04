@@ -42,11 +42,17 @@ jobs:
           }
           $distDir = Join-Path $env:GITHUB_WORKSPACE "dist"
           New-Item -ItemType Directory -Path $distDir -Force | Out-Null
+          $packageRoot = Join-Path $distDir "proxifyre-ui"
+          if (Test-Path $packageRoot) {
+            Remove-Item $packageRoot -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $packageRoot -Force | Out-Null
+          Copy-Item -Path (Join-Path $outputDir '*') -Destination $packageRoot -Recurse -Force
           $zipPath = Join-Path $distDir "proxifyre-ui.zip"
           if (Test-Path $zipPath) {
             Remove-Item $zipPath -Force
           }
-          Compress-Archive -Path (Join-Path $outputDir '*') -DestinationPath $zipPath
+          Compress-Archive -Path $packageRoot -DestinationPath $zipPath
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
