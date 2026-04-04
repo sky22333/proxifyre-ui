@@ -131,7 +131,39 @@
                     </StackPanel>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="代理应用列表" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,5" />
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="代理应用列表" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                    <ui:Button x:Name="AppNameHintButton"
+                               Appearance="Transparent"
+                               Icon="{ui:SymbolIcon Info24}"
+                               Padding="2"
+                               Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               Focusable="False"
+                               Click="AppNameHintButton_Click" />
+                    <Popup x:Name="AppNameHintPopup"
+                           PlacementTarget="{Binding ElementName=AppNameHintButton}"
+                           Placement="Bottom"
+                           VerticalOffset="6"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           StaysOpen="False">
+                        <Border Padding="12"
+                                MaxWidth="420"
+                                CornerRadius="8"
+                                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock FontWeight="SemiBold" Margin="0,0,0,8" Text="应用名称添加说明：" />
+                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Text="• 支持可执行文件名的全名或部分名，如 firefox 或 firefox.exe" />
+                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Text="• 包含该名称的程序也会匹配，如 NewFirefox.exe" />
+                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Text="• 支持完整路径匹配整个文件夹（对UWP应用很有用）" />
+                                <TextBlock TextWrapping="Wrap" Text="• 示例：C:\Program Files\nodejs" FontFamily="Consolas" />
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </StackPanel>
                 
                 <Grid Grid.Row="3">
                     <Grid.RowDefinitions>

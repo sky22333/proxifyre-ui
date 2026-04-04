@@ -42,6 +42,7 @@ namespace proxifyre_ui
 
         private void FluentWindow_Closing(object sender, CancelEventArgs e)
         {
+            AppNameHintPopup.IsOpen = false;
             e.Cancel = true;
             this.Hide();
         }
@@ -66,6 +67,11 @@ namespace proxifyre_ui
             {
                 Application.Current.Shutdown();
             }
+        }
+
+        private void AppNameHintButton_Click(object sender, RoutedEventArgs e)
+        {
+            AppNameHintPopup.IsOpen = !AppNameHintPopup.IsOpen;
         }
     }
 }
