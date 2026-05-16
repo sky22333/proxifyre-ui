@@ -13,10 +13,9 @@ namespace proxifyre_ui
 
         public MainWindow()
         {
-            InitializeComponent();
-            
-            Wpf.Ui.Appearance.ApplicationThemeManager.Apply(this);
             Wpf.Ui.Appearance.SystemThemeWatcher.Watch(this);
+
+            InitializeComponent();
 
             if (this.DataContext is MainViewModel vm)
             {

@@ -8,7 +8,6 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </ui:ContentDialog.Resources>
     
-    <!-- Wrapper Border with Solid Background, Border, and Shadow for high contrast depth -->
     <Border Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" 
             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
             BorderThickness="1"
@@ -16,9 +15,6 @@
             Padding="24"
             MaxWidth="600"
             MaxHeight="480">
-        <Border.Effect>
-            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="20" ShadowDepth="4" />
-        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -47,6 +43,7 @@
             <ListBox Grid.Row="3" ItemsSource="{Binding InstallLogLines}" x:Name="LogListBox"
                      MinHeight="120" FontFamily="Consolas" FontSize="12"
                      Background="{DynamicResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                      Visibility="{Binding HasLog, Converter={StaticResource BoolToVis}}" Margin="0,0,0,15"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -54,6 +51,7 @@
                      VirtualizingStackPanel.VirtualizationMode="Recycling">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
+                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                         <Setter Property="Focusable" Value="False"/>
                         <Setter Property="Padding" Value="0,2"/>
                     </Style>

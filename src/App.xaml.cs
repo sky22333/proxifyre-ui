@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
+using Wpf.Ui.Appearance;
 
 namespace proxifyre_ui
 {
@@ -46,6 +47,8 @@ namespace proxifyre_ui
             }
 
             base.OnStartup(e);
+
+            ApplicationThemeManager.ApplySystemTheme();
 
             var mainWindow = new MainWindow();
             
