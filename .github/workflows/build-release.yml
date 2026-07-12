@@ -20,10 +20,10 @@ jobs:
       RELEASE_TAG: ${{ github.event.inputs.tag_name }}
     steps:
       - name: 拉取仓库代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
@@ -55,13 +55,13 @@ jobs:
           Compress-Archive -Path $packageRoot -DestinationPath $zipPath
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: proxifyre-ui
           path: dist/proxifyre-ui.zip
 
       - name: 创建 GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
